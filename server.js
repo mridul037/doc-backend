@@ -7,8 +7,6 @@
 
    
    
-  
-   
    app.use(cors({
     origin: 'http://localhost:3000',
     credentials: true,
@@ -31,20 +29,34 @@
   });
   
 
-   let documentContent = '';
+  let documentContent = '';
+  let lastUpdateTime = Date.now();
+  const UPDATE_THRESHOLD = 50;
 
    io.on('connection', (socket) => {
     console.log('A user connected');
   
     // Send the current document content to the new user
-    socket.emit('document-update', documentContent); // Change newContent to documentContent
+    socket.emit('document-update', {
+        content: documentContent,
+        sender: 'server'
+      }); // Change newContent to documentContent
   
     // Handle document updates from clients
     socket.on('document-update', function(newContent) {
-      console.log('Received document-update event'); // Add this line
-      documentContent = newContent;
-      console.log('Document content updated:', documentContent);
-      io.emit('document-update', documentContent);
+        const currentTime = Date.now();
+    
+        // Throttle updates
+        if (currentTime - lastUpdateTime > UPDATE_THRESHOLD) {
+          documentContent = data.content;
+          lastUpdateTime = currentTime;
+    
+          // Broadcast to others
+          socket.broadcast.emit('document-update', {
+            content: documentContent,
+            sender: socket.id
+          });
+        }
     });
   
     socket.on('disconnect', () => {
