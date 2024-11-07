@@ -43,7 +43,7 @@
       }); // Change newContent to documentContent
   
     // Handle document updates from clients
-    socket.on('document-update', function(newContent) {
+    socket.on('document-update', function(data) {
         const currentTime = Date.now();
     
         // Throttle updates
